@@ -1,8 +1,5 @@
 service:
   name: game-store-service
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
 
 custom:
   webpack:
@@ -16,16 +13,30 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
+  profile: aws-test
   region: eu-west-1
+  stage: dev
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
 
 functions:
-  hello:
-    handler: handler.hello
+  getProductsList:
+    handler: handler.getProductsList
     events:
       - http:
           method: get
-          path: hello
+          path: products
+          cors: true
+  getProductsById:
+    handler: handler.getProductsById
+    events:
+      - http:
+          method: get
+          path: products/{id}
+          request:
+            parameters:
+              paths:
+                id: true
+          cors: true
