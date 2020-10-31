@@ -3,7 +3,7 @@ info:
   title: "dev-game-store-service"
   version: "2020-10-31T13:28:49Z"
 servers:
-#  - url: "https://xxx.execute-api.us-west-1.amazonaws.com/{basePath}"
+  - url: "https://x5v02w7ua0.execute-api.eu-west-1.amazonaws.com/{basePath}"
     variables:
       basePath:
         default: "dev"
@@ -12,8 +12,8 @@ paths:
     get:
       summary: "Get a game by id"
       parameters:
-        - name: "id"
-          in: "path"
+        - in: "path"
+          name: "id"
           required: true
           schema:
             type: "string"
@@ -79,7 +79,8 @@ components:
           type: string
         platforms:
           type: array
-          items: "#/components/schemas/GamePlatform"
+          items:
+            $ref: "#/components/schemas/GamePlatform"
         genre:
           type: string
         description:
