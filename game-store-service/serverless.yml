@@ -28,7 +28,11 @@ functions:
       - http:
           method: get
           path: products
-          cors: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - '*'
   getProductsById:
     handler: handler.getProductsById
     events:
@@ -39,4 +43,8 @@ functions:
             parameters:
               paths:
                 id: true
-          cors: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - '*'
