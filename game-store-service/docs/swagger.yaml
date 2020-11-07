@@ -1,0 +1,97 @@
+openapi: "3.0.1"
+info:
+  title: "dev-game-store-service"
+  version: "2020-10-31T13:28:49Z"
+servers:
+  - url: "https://x5v02w7ua0.execute-api.eu-west-1.amazonaws.com/{basePath}"
+    variables:
+      basePath:
+        default: "dev"
+paths:
+  /games/{id}:
+    get:
+      summary: "Get a game by id"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        200:
+          description: "A single game"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+    options:
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /games:
+    get:
+      summary: "Returns a list of games"
+      responses:
+        200:
+          description: "A JSON array of games"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Game"
+    options:
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+components:
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        studio:
+          type: string
+        platforms:
+          type: array
+          items:
+            $ref: "#/components/schemas/GamePlatform"
+        genre:
+          type: string
+        description:
+          type: string
+        release_date:
+          type: string
+        poster:
+          type: string
+        price:
+          type: integer
+        count:
+          type: integer
+    GamePlatform:
+      type: string
