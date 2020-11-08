@@ -2,6 +2,10 @@
 node_modules
 jspm_packages
 
+#dotenv variables
+.env.local
+.env.development
+
 # Serverless directories
 .serverless
 

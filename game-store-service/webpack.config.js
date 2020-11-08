@@ -41,14 +41,14 @@ module.exports = {
     ],
   },
   plugins: [
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: 'functions/data/games.json',
-          to: 'data/',
-          force: true
-        },
-      ],
-    })
+    // new CopyWebpackPlugin({
+    //   patterns: [
+    //     {
+    //       from: 'functions/data/games.json',
+    //       to: 'data/',
+    //       force: true
+    //     },
+    //   ],
+    // })
   ],
 };

@@ -6,17 +6,20 @@ const headers = {
   "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
 };
 
-const getGameById: APIGatewayProxyHandler = async (event, _context) => {
+const getGameById: APIGatewayProxyHandler = async (_event, _context) => {
   let client;
   try {
     const {
       pathParameters: { id: gameId },
-    } = event;
+    } = _event;
+    console.debug('Get product by id request with params: \n', JSON.stringify(_event.pathParameters,null, 2));
 
     client = await invokeClient();
-    const {rows} = await client.query(`SELECT * FROM products WHERE id=$1`, [gameId]);
-    const [product] = rows.length ? rows : null;
-    if (!product) {
+    const {rows: [foundItem]} = await client.query(
+      'select p.*, s.count from products p join stocks s on s.product_id = p.id where p.id = $1',
+      [gameId]
+    );
+    if (!foundItem) {
       return {
         statusCode: 404,
         headers,
@@ -26,11 +29,15 @@ const getGameById: APIGatewayProxyHandler = async (event, _context) => {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(product),
+        body: JSON.stringify(foundItem),
       };
     }
   } catch (error) {
-    throw Error("[500] Internal Server Error");
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error }),
+    };
   } finally {
     closeClient(client);
   }

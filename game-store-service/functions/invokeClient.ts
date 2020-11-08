@@ -14,10 +14,16 @@ const dbOptions = {
 };
 
 export const invokeClient = async () => {
+  console.debug('Connecting to db with options: \n', JSON.stringify(dbOptions, null, 2));
+
   const client = new Client(dbOptions);
   await client.connect();
 
   return client;
 };
 
-export const closeClient = client => client && client.end ? client.end() : null;
+export const closeClient = client => {
+  if (client && client.end) {
+    client.end();
+  }
+};
