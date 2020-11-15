@@ -93,7 +93,6 @@ provider:
     PG_DATABASE: ${env:PG_DATABASE}
     PG_USERNAME: ${env:PG_USERNAME}
     PG_PASSWORD: ${env:PG_PASSWORD}
-    THUMBNAILS_BUCKET: ${env:THUMBNAILS_BUCKET}
 
 functions:
   getProductsList:
@@ -146,17 +145,6 @@ functions:
               responseModels:
                 "application/json": CreateProductResponse
             - ${self:custom.commonModelSchemaFragments.MethodResponse400Json}
-  getThumbnailsList:
-    handler: handler.getThumbnailsList
-    events:
-      - http:
-          method: get
-          path: thumbnails
-          cors:
-            origins:
-              - '*'
-            headers:
-              - '*'
 
 resources:
   Resources:
