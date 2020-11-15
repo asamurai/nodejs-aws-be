@@ -1,44 +1,53 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { readFileSync } from "fs";
-import * as path from "path";
-import { GameList, Game } from "../types";
-import { delay } from "../delay";
+import { invokeClient, closeClient } from './invokeClient';
 
 const headers = {
   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
   "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
 };
 
-const gamesList: GameList = JSON.parse(
-  readFileSync(path.join(__dirname, "data", "games.json"), "utf-8")
-);
-
-const getGameById: APIGatewayProxyHandler = async (event, _context) => {
+const getGameById: APIGatewayProxyHandler = async (_event, _context) => {
+  let client;
   try {
     const {
-      pathParameters: { id },
-    } = event;
+      pathParameters: { id: gameId },
+    } = _event;
+    console.debug('Get product by id request with params: \n', JSON.stringify(_event.pathParameters,null, 2));
 
-    const game = await delay<Game>(
-      () => gamesList.find((game) => game.id === id),
-      150
-    );
-
-    if (game) {
+    if (!/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/.test(gameId)) {
       return {
-        statusCode: 200,
+        statusCode: 400,
         headers,
-        body: JSON.stringify(game),
+        body: "Request param id is not valid",
       };
     }
 
-    return {
-      statusCode: 404,
-      headers,
-      body: "Page not found",
-    };
+    client = await invokeClient();
+    const {rows: [foundItem]} = await client.query(
+      'select p.*, s.count from products p join stocks s on s.product_id = p.id where p.id = $1',
+      [gameId]
+    );
+    if (!foundItem) {
+      return {
+        statusCode: 404,
+        headers,
+        body: "Page not found",
+      };
+    } else {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(foundItem),
+      };
+    }
   } catch (error) {
-    throw Error("[500] Internal Server Error");
+    return {
+      statusCode: 500,
+      headers,
+      body: 'Internal Server Error',
+    };
+  } finally {
+    closeClient(client);
   }
 };
 
