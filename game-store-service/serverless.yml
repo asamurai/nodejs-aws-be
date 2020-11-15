@@ -36,7 +36,11 @@ custom:
             description:
               type: string
             price:
-              type: number
+              type: integer
+              minimum: 0
+            count:
+              type: integer
+              minimum: 0
             studio:
               type: string
             genre:
