@@ -24,7 +24,7 @@ const getGamesList: APIGatewayProxyHandler = async (_event, _context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error }),
+      body: 'Internal Server Error',
     };
   } finally {
     closeClient(client);

@@ -14,6 +14,14 @@ const getGameById: APIGatewayProxyHandler = async (_event, _context) => {
     } = _event;
     console.debug('Get product by id request with params: \n', JSON.stringify(_event.pathParameters,null, 2));
 
+    if (!/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/.test(gameId)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: "Request param id is not valid",
+      };
+    }
+
     client = await invokeClient();
     const {rows: [foundItem]} = await client.query(
       'select p.*, s.count from products p join stocks s on s.product_id = p.id where p.id = $1',
@@ -36,7 +44,7 @@ const getGameById: APIGatewayProxyHandler = async (_event, _context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error }),
+      body: 'Internal Server Error',
     };
   } finally {
     closeClient(client);
