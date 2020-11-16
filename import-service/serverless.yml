@@ -74,15 +74,15 @@ resources:
         AccessControl: PublicRead
         VersioningConfiguration:
           Status: Enabled
-# TODO: finish up with create cors rules on bucket deploy
-#        CorsConfiguration:
-#          CorsRules:
-#            - AllowedMethods:
-#              - '"PUT"'
-#            - AllowedOrigins:
-#              - '"*"'
-#            - AllowedHeaders:
-#              - '"*"'
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedMethods:
+                - "PUT"
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
 
     ## Allowing to read objects from Thumbnails S3 Bucket
     ThumbnailsS3BucketPolicy:
