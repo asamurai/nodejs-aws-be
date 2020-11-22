@@ -84,10 +84,21 @@ provider:
   profile: aws-test
   region: eu-west-1
   stage: dev
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: "sqs:*"
+      Resource:
+        - Fn::GetAtt: [ SQSQueue, Arn ]
+    - Effect: "Allow"
+      Action: "sns:*"
+      Resource:
+        - Ref: SNSTopic
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    TOPIC_ARN:
+      Ref: SNSTopic
     PG_HOST: ${env:PG_HOST}
     PG_PORT: ${env:PG_PORT}
     PG_DATABASE: ${env:PG_DATABASE}
@@ -145,8 +156,26 @@ functions:
               responseModels:
                 "application/json": CreateProductResponse
             - ${self:custom.commonModelSchemaFragments.MethodResponse400Json}
+  catalogBatchProcess:
+    handler: handler.catalogBatchProcess
+    events:
+      - sqs:
+          batchSize: 5
+          arn:
+            Fn::GetAtt:
+              - SQSQueue
+              - Arn
 
 resources:
+  Outputs:
+    SQSQueueUrl:
+      Value:
+        Ref: SQSQueue
+    SQSQueueArn:
+      Value:
+        Fn::GetAtt:
+         - SQSQueue
+         - Arn
   Resources:
     onlyBody:
       Type: "AWS::ApiGateway::RequestValidator"
@@ -156,3 +185,31 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
+    SQSQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:SQS_NAME}
+    SNSTopic:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        TopicName: ${env:TOPIC_NAME}
+    SNSSubscriptionSuccess:
+      Type: "AWS::SNS::Subscription"
+      Properties:
+        Endpoint: ${env:SUCCESS_EMAIL}
+        Protocol: email
+        TopicArn:
+          Ref: SNSTopic
+        FilterPolicy:
+          status:
+            - SUCCESS
+    SNSSubscriptionFailure:
+      Type: "AWS::SNS::Subscription"
+      Properties:
+        Endpoint: ${env:FAILURE_EMAIL}
+        Protocol: email
+        TopicArn:
+          Ref: SNSTopic
+        FilterPolicy:
+          status:
+            - FAILURE

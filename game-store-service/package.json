@@ -5,14 +5,16 @@
   "main": "handler.js",
   "scripts": {
     "deploy": "sls deploy",
-    "test": "jest"
+    "test": "jest tests/catalogBatchProcess.test.ts"
   },
   "dependencies": {
+    "aws-sdk": "^2.797.0",
     "pg": "^8.4.2",
     "source-map-support": "^0.5.10"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.17",
+    "@types/aws-sdk": "^2.7.0",
     "@types/jest": "^26.0.15",
     "@types/node": "^10.17.44",
     "@types/pg": "^7.14.6",
