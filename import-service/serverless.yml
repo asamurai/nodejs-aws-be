@@ -1,0 +1,100 @@
+service:
+  name: game-store-import-service
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  profile: aws-test
+  region: eu-west-1
+  stage: dev
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: "s3:ListBucket"
+      Resource:
+        - arn:aws:s3:::${env:IMPORT_BUCKET_NAME}
+    - Effect: "Allow"
+      Action: "s3:*"
+      Resource:
+        - arn:aws:s3:::${env:IMPORT_BUCKET_NAME}/*
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    IMPORT_BUCKET_NAME: ${env:IMPORT_BUCKET_NAME}
+    SIGNED_URL_EXPIRATION: ${env:SIGNED_URL_EXPIRATION}
+    COPY_PREFIX: ${env:COPY_PREFIX}
+    IMPORT_FILE_PREFIX: ${env:IMPORT_FILE_PREFIX}
+
+functions:
+  importProductsFile:
+    handler: handler.importProductsFile
+    events:
+      - http:
+          method: get
+          path: import
+          request:
+            parameters:
+              querystrings:
+                name: true
+          cors:
+            origins:
+              - '*'
+            headers:
+              - '*'
+  importFileParser:
+    handler: handler.importFileParser
+    events:
+      - s3:
+          bucket: ${env:IMPORT_BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: ${env:IMPORT_FILE_PREFIX}/
+            - suffix: .csv
+          existing: true
+
+resources:
+  Resources:
+    ## Specifying the Thumbnails S3 Bucket
+    ThumbnailsS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:IMPORT_BUCKET_NAME}
+        AccessControl: PublicRead
+        VersioningConfiguration:
+          Status: Enabled
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedMethods:
+                - "PUT"
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+
+    ## Allowing to read objects from Thumbnails S3 Bucket
+    ThumbnailsS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: ThumbnailsS3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: 'AllowPublicRead'
+              Effect: 'Allow'
+              Principal:
+                AWS: '*'
+              Action: 's3:GetObject'
+              Resource: arn:aws:s3:::${env:IMPORT_BUCKET_NAME}/*
