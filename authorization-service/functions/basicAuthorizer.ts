@@ -1,25 +1,60 @@
-import { S3Event } from "aws-lambda";
+import {
+  APIGatewayAuthorizerResult,
+  APIGatewayTokenAuthorizerHandler,
+} from "aws-lambda";
 
-const headers = {
-  "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-  "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
-};
+const BASIC_SCHEME = "Basic";
 
-const basicAuthorizer = async (_event: S3Event) => {
+export const basicAuthorizer: APIGatewayTokenAuthorizerHandler = (
+  event,
+  _context,
+  callback
+) => {
+  if (event["type"] !== "TOKEN") {
+    callback("Unauthorized");
+    return;
+  }
+
   try {
-    console.debug('Authorization lambda triggered with params: \n', JSON.stringify(_event,null, 2));
+    const { authorizationToken, methodArn } = event;
+    const [authScheme, encodedCreds] = authorizationToken.split(" ");
 
-    return {
-      statusCode: 200,
-      body: 'Authorization result'
-    };
+    if (authScheme !== BASIC_SCHEME || !encodedCreds) {
+      callback("Unauthorized");
+      return;
+    }
+
+    const [userName, password] = Buffer.from(encodedCreds, "base64")
+      .toString("utf-8")
+      .split(":");
+    const validUserPassword = process.env[userName];
+    const effect =
+      validUserPassword && validUserPassword === password ? "Allow" : "Deny";
+    const policy = generatePolicy(encodedCreds, methodArn, effect);
+
+    callback(null, policy);
   } catch (error) {
-    return {
-      statusCode: 500,
-      headers,
-      body: 'Internal Server Error',
-    };
+    console.log("Error:", error);
+    callback("Unauthorized");
   }
 };
+
+const generatePolicy = (
+  principalId,
+  resource,
+  effect = "Deny"
+): APIGatewayAuthorizerResult => ({
+  principalId,
+  policyDocument: {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Action: "execute-api:Invoke",
+        Effect: effect,
+        Resource: resource,
+      }
+    ],
+  },
+});
 
 export default basicAuthorizer;

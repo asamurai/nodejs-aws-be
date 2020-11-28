@@ -26,12 +26,11 @@ provider:
 functions:
   basicAuthorizer:
     handler: handler.basicAuthorizer
-    events:
-      - http:
-          method: get
-          path: auth
-          cors:
-            origins:
-              - '*'
-            headers:
-              - '*'
+
+resources:
+  Outputs:
+    basicAuthorizerArn:
+      Value:
+        Fn::GetAtt:
+          - BasicAuthorizerLambdaFunction
+          - Arn
