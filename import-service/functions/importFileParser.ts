@@ -1,11 +1,12 @@
 import {S3Event} from "aws-lambda";
-import { S3 } from "aws-sdk";
+import { S3, SQS } from "aws-sdk";
 import csv from "csv-parser";
 
 const {
   IMPORT_BUCKET_NAME,
   COPY_PREFIX,
-  IMPORT_FILE_PREFIX
+  IMPORT_FILE_PREFIX,
+  SQS_URL
 } = process.env;
 
 const headers = {
@@ -13,11 +14,29 @@ const headers = {
   "Access-Control-Allow-Credentials": true, // Required for cookies, authorization headers with HTTPS
 };
 
+const sendProductToQueue = (sqs: SQS, product) => {
+  sqs.sendMessage(
+    {
+      QueueUrl: SQS_URL,
+      MessageBody: JSON.stringify(product),
+    },
+    (error, data) => {
+      if (error) {
+        console.error("SQS error: \n", JSON.stringify(error));
+        return;
+      }
+
+      console.debug("Product was sent to SQS: \n", JSON.stringify(data));
+    }
+  );
+};
+
 const importFileParser = async (_event: S3Event) => {
   try {
     console.debug('File creation triggered event with params: \n', JSON.stringify(_event,null, 2));
 
     const s3 = new S3({ region: 'eu-west-1' });
+    const sqs = new SQS({ region: 'eu-west-1' });
 
     const streams = [];
 
@@ -31,9 +50,13 @@ const importFileParser = async (_event: S3Event) => {
 
         s3Stream.pipe(csv())
           .on('open', () => console.debug(`Parsing file ${key}`))
-          .on('data', data => console.debug('csv-parser data:', data))
+          .on('data', data => {
+            console.debug('csv-parser data: ', JSON.stringify(data));
+            sendProductToQueue(sqs, data)
+          })
           .on('error', async error => {
-            console.log('Error:', error);
+            console.error('Error: \n', JSON.stringify(error));
+
             await s3.deleteObject({
               Bucket: IMPORT_BUCKET_NAME,
               Key: key

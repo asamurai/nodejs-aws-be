@@ -29,6 +29,9 @@ provider:
       Action: "s3:*"
       Resource:
         - arn:aws:s3:::${env:IMPORT_BUCKET_NAME}/*
+    - Effect: "Allow"
+      Action: "sqs:*"
+      Resource: ${cf:game-store-service-${self:provider.stage}.SQSQueueArn}
 
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
@@ -36,6 +39,7 @@ provider:
     SIGNED_URL_EXPIRATION: ${env:SIGNED_URL_EXPIRATION}
     COPY_PREFIX: ${env:COPY_PREFIX}
     IMPORT_FILE_PREFIX: ${env:IMPORT_FILE_PREFIX}
+    SQS_URL: ${cf:game-store-service-${self:provider.stage}.SQSQueueUrl}
 
 functions:
   importProductsFile:
