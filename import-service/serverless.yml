@@ -58,7 +58,7 @@ functions:
             headers:
               - '*'
   importFileParser:
-    handler: handler.importFileParser
+    handler: handler.basicAuthorizer
     events:
       - s3:
           bucket: ${env:IMPORT_BUCKET_NAME}
