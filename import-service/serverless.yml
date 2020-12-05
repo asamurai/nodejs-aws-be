@@ -57,6 +57,12 @@ functions:
               - '*'
             headers:
               - '*'
+          authorizer:
+            name: tokenAuthorizer
+            arn: ${cf:game-store-authorizarion-service-${self:provider.stage}.basicAuthorizerArn}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: token
   importFileParser:
     handler: handler.importFileParser
     events:
@@ -70,6 +76,16 @@ functions:
 
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Credentials: "'true'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
     ## Specifying the Thumbnails S3 Bucket
     ThumbnailsS3Bucket:
       Type: AWS::S3::Bucket
