@@ -64,7 +64,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   importFileParser:
-    handler: handler.basicAuthorizer
+    handler: handler.importFileParser
     events:
       - s3:
           bucket: ${env:IMPORT_BUCKET_NAME}
