@@ -7,10 +7,7 @@ export class ProxyService {
 
   request(url: string, { method, params, body: data }) {
     return this.httpService
-      .request({
-        url,
-        method,
-        params,
+      .request({ url, method, params,
         ...(Object.keys(data).length ? { data } : {}),
       })
       .pipe(

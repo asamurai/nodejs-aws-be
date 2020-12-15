@@ -1,13 +1,4 @@
-import {
-  All,
-  CacheInterceptor,
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Req,
-  UseInterceptors,
-} from '@nestjs/common';
+import { All, CacheInterceptor, Controller, Get, HttpException, HttpStatus, Req, UseInterceptors } from '@nestjs/common';
 import { Request } from 'express';
 import { ProxyService } from './proxy.service';
 
@@ -30,7 +21,7 @@ export class ProxyController {
     const apiEndpoint = process.env[serviceName];
 
     if (!apiEndpoint) {
-      throw new HttpException('Cannot process request', HttpStatus.BAD_GATEWAY);
+      throw new HttpException(`Cannot create request because service with name ${serviceName} is absent `, HttpStatus.BAD_GATEWAY);
     }
 
     return this.proxyService.request(
